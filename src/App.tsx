@@ -23,7 +23,7 @@ export default function App() {
 
   return (
     <PxlKitToastProvider position="top-right" max={3}>
-      <div className="min-h-screen py-10">
+      <div className="min-h-screen py-4">
       <aside className="fixed left-6 top-1/2 z-10 hidden h-[min(78vh,48rem)] w-44 -translate-y-1/2 items-center sm:flex">
         <PixelStepper
           active={activeIndex}
