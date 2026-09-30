@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { PixelFileUpload, PixelNumberInput, PixelButton, PixelCard } from '@pxlkit/ui-kit';
 import { PxlKitIcon } from '@pxlkit/core';
 import { ArrowRight } from '@pxlkit/ui';
-import { CanvasGridView } from '../CanvasGridView';
 import type { WfcEngineApi } from '../../hooks/useWfcEngine';
 
 interface UploadStepProps {
@@ -12,21 +11,34 @@ interface UploadStepProps {
 
 export function UploadStep({ api, onNext }: UploadStepProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [tileSize, setTileSize] = useState(16);
+  const [tileSize, setTileSize] = useState(22);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [sourceSize, setSourceSize] = useState({ width: 0, height: 0 });
+  const [displayWidth, setDisplayWidth] = useState(0);
   const [previewReady, setPreviewReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const tileSizeInputRef = useRef<HTMLInputElement>(null);
+  const previewImageRef = useRef<HTMLImageElement>(null);
   const resizeRef = useRef<{ pointerId: number; startX: number; startY: number; startTileSize: number } | null>(null);
-
-  const previewFrameSize = 192;
 
   useEffect(() => {
     return () => {
       if (previewSrc) URL.revokeObjectURL(previewSrc);
     };
   }, [previewSrc]);
+
+  const sourceImage = previewSrc ?? api.inputImageSrc;
+
+  useEffect(() => {
+    const image = previewImageRef.current;
+    if (!image) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      setDisplayWidth(image.getBoundingClientRect().width);
+    });
+    resizeObserver.observe(image);
+    return () => resizeObserver.disconnect();
+  }, [sourceImage]);
 
   const handleUpload = (next: File[]) => {
     setFiles(next);
@@ -54,7 +66,8 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
   };
 
   const handleResizeStart = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (!sourceSize.width || !sourceSize.height) return;
+    if (!sourceSize.width || !displayWidth) return;
+    event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     resizeRef.current = {
       pointerId: event.pointerId,
@@ -68,10 +81,12 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
     const resize = resizeRef.current;
     if (!resize || resize.pointerId !== event.pointerId) return;
 
-    const sourcePixelsPerDisplayPixel = sourceSize.width / previewFrameSize;
-    const dragDistance = Math.max(event.clientX - resize.startX, event.clientY - resize.startY);
+    const sourcePixelsPerDisplayPixel = sourceSize.width / displayWidth;
+    const deltaX = event.clientX - resize.startX;
+    const deltaY = event.clientY - resize.startY;
+    const dragDistance = Math.abs(deltaX) >= Math.abs(deltaY) ? deltaX : deltaY;
     const nextTileSize = Math.round(resize.startTileSize + dragDistance * sourcePixelsPerDisplayPixel);
-    handleTileSizeChange(Math.min(128, Math.max(4, nextTileSize)));
+    handleTileSizeChange(Math.min(128, Math.max(1, nextTileSize)));
   };
 
   const handleResizeEnd = (event: React.PointerEvent<HTMLButtonElement>) => {
@@ -79,11 +94,9 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  const sourceImage = previewSrc ?? api.inputImageSrc;
-  const previewTileSize = Math.min(96, Math.max(24, (tileSize / 16) * 38));
-  const previewImageWidth = sourceSize.width && tileSize
-    ? (sourceSize.width / tileSize) * previewTileSize
-    : previewFrameSize;
+  const displayTileSize = sourceSize.width && displayWidth
+    ? (tileSize / sourceSize.width) * displayWidth
+    : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,55 +105,56 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wide">Tile size preview</h3>
-                <p className="text-xs text-[var(--retro-muted)]">Top-left tile from your input image</p>
+                <h3 className="text-sm font-bold uppercase tracking-wide">Input image</h3>
+                <p className="text-xs text-[var(--retro-muted)]">Drag the highlighted tile corner to resize the grid.</p>
               </div>
               <span className="font-mono text-xs text-[var(--retro-muted)]">{tileSize}px × {tileSize}px</span>
             </div>
             <div
-              className="relative h-48 w-48 touch-none overflow-hidden border-2 border-[var(--retro-border)] bg-[var(--retro-bg)]"
-              aria-label="Top-left tile size preview"
+              className="relative w-full touch-none overflow-hidden border-2 border-[var(--retro-border)] bg-[var(--retro-bg)]"
+              aria-label="Input image with adjustable tile grid"
             >
               {sourceImage ? (
                 <img
                   src={sourceImage}
-                  alt="Top-left tile preview"
-                  className="pixelated absolute left-0 top-0 max-w-none"
-                  style={{ width: `${previewImageWidth}px`, height: 'auto' }}
+                  alt="Uploaded terrain tileset"
+                  className="pixelated block h-auto w-full"
                   onLoad={(event) => {
                     setSourceSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight });
+                    setDisplayWidth(event.currentTarget.getBoundingClientRect().width);
                   }}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center px-4 text-center text-xs text-[var(--retro-muted)]">
-                  Choose an image to preview its first tile
+                <div className="flex min-h-48 items-center justify-center px-4 text-center text-xs text-[var(--retro-muted)]">
+                  Choose an image to preview its tile grid
                 </div>
               )}
-              {sourceImage && sourceSize.width > 0 && (
+              {sourceImage && sourceSize.width > 0 && displayTileSize > 0 && (
                 <>
-                  <div
-                    className="pointer-events-none absolute left-0 top-0 border-2 border-cyan-300 bg-cyan-300/10"
-                    style={{ width: `${previewTileSize}px`, height: `${previewTileSize}px` }}
-                  />
                   <div
                     className="pointer-events-none absolute inset-0"
                     style={{
-                      backgroundImage: `linear-gradient(to right, rgba(255,255,255,0.45) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.45) 1px, transparent 1px)`,
-                      backgroundSize: `${previewTileSize}px ${previewTileSize}px`,
+                      backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.55) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.55) 1px, transparent 1px)',
+                      backgroundSize: `${displayTileSize}px ${displayTileSize}px`,
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/25" />
+                  <div
+                    className="pointer-events-none absolute left-0 top-0 border-2 border-cyan-300 bg-cyan-300/10"
+                    style={{ width: `${displayTileSize}px`, height: `${displayTileSize}px` }}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Drag to resize tile grid"
+                    title="Drag to resize tile grid"
+                    className="absolute z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 touch-none cursor-nwse-resize border-2 bg-cyan-200/80 border-cyan-500 bg-[var(--retro-panel)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
+                    style={{ left: `${displayTileSize}px`, top: `${displayTileSize}px` }}
+                    onPointerDown={handleResizeStart}
+                    onPointerMove={handleResizeMove}
+                    onPointerUp={handleResizeEnd}
+                    onPointerCancel={handleResizeEnd}
+                  />
                 </>
               )}
-              <button
-                type="button"
-                aria-label="Resize tile preview"
-                className="absolute bottom-0 right-0 h-5 w-5 cursor-nwse-resize border-l-2 border-t-2 border-[var(--retro-border)] bg-[var(--retro-panel)]"
-                onPointerDown={handleResizeStart}
-                onPointerMove={handleResizeMove}
-                onPointerUp={handleResizeEnd}
-                onPointerCancel={handleResizeEnd}
-              />
             </div>
           </div>
 
@@ -175,14 +189,6 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
             </div>
           </div>
         </div>
-      </PixelCard>
-
-      <PixelCard title="Preview" description="How your sheet gets sliced into tiles.">
-        {loading ? (
-          <p className="text-xs text-[var(--retro-muted)]">Slicing tileset…</p>
-        ) : (
-          <CanvasGridView tiles={previewReady && api.inputTiles.length ? api.inputTiles : []} fadeInMs={0} />
-        )}
       </PixelCard>
 
       <div className="flex justify-end">

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
 import { PixelStepper, PixelContainer, PixelSectionHeader, PxlKitToastProvider } from '@pxlkit/ui-kit';
 import { useWfcEngine } from './hooks/useWfcEngine';
 import { UploadStep } from './components/steps/UploadStep';
@@ -55,31 +54,27 @@ export default function App() {
           </PixelStepper>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -16 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-          >
-            {step === 'upload' && <UploadStep api={api} onNext={() => goTo('analyze')} />}
-            {step === 'analyze' && (
-              <AnalyzeStep api={api} onNext={() => goTo('configure')} onBack={() => goTo('upload')} />
-            )}
-            {step === 'configure' && (
-              <ConfigureStep api={api} onNext={() => goTo('generate')} onBack={() => goTo('analyze')} />
-            )}
-            {step === 'generate' && (
+        <div>
+          <div hidden={step !== 'upload'}>
+            <UploadStep api={api} onNext={() => goTo('analyze')} />
+          </div>
+          <div hidden={step !== 'analyze'}>
+            <AnalyzeStep api={api} onNext={() => goTo('configure')} onBack={() => goTo('upload')} />
+          </div>
+          <div hidden={step !== 'configure'}>
+            <ConfigureStep api={api} onNext={() => goTo('generate')} onBack={() => goTo('analyze')} />
+          </div>
+          {step === 'generate' && (
+            <div>
               <GenerateStep
                 api={api}
                 onBack={() => goTo('configure')}
                 onRestartRequired={() => setRestartRequired(true)}
                 restartRequired={restartRequired}
               />
-            )}
-          </motion.div>
-        </AnimatePresence>
+            </div>
+          )}
+        </div>
         </PixelContainer>
       </main>
       </div>

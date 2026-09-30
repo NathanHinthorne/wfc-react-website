@@ -69,23 +69,7 @@ export function AnalyzeStep({ api, onNext, onBack }: AnalyzeStepProps) {
           <div className="flex flex-col gap-4">
             <TileVariantGallery tiles={api.tileVariants} selected={selected} onToggle={toggle} />
 
-            <div className="flex flex-wrap items-end gap-3 border-t-2 border-[var(--retro-border)] pt-4">
-              <PixelButton
-                tone="green"
-                size="sm"
-                disabled={selected.length === 0}
-                onClick={() => applyBehavior('floor')}
-              >
-                Mark as Floor
-              </PixelButton>
-              <PixelButton
-                tone="cyan"
-                size="sm"
-                disabled={selected.length === 0}
-                onClick={() => applyBehavior('empty')}
-              >
-                Mark as Empty
-              </PixelButton>
+            {/* <div className="flex flex-wrap items-end gap-3 border-t-2 border-[var(--retro-border)] pt-4">
 
               <div className="flex items-end gap-2">
                 <PixelInput
@@ -109,7 +93,7 @@ export function AnalyzeStep({ api, onNext, onBack }: AnalyzeStepProps) {
               >
                 Reset behaviors
               </PixelButton>
-            </div>
+            </div> */}
           </div>
         </PixelCard>
       )}

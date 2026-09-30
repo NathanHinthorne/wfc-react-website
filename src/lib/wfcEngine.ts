@@ -17,14 +17,8 @@ export type StepResult =
   | { status: 'backtrack'; totalBacktracks: number; retryCount: number }
   | { status: 'complete' };
 
-/**
- * A framework-agnostic port of wfc.js + its supporting classes.
- * The generation loop that used to live inside p5's draw()/populateOutputGrid()
- * is now a single `.step()` call the UI drives via requestAnimationFrame,
- * so the wizard can control speed, pausing, and per-cell animation.
- */
 export class WfcEngine {
-  tilePixelSize = 16;
+  tilePixelSize = 22;
 
   inputGrid: Tile[][] = [];
   tileVariants: Tile[] = [];

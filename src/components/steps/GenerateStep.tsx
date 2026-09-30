@@ -123,7 +123,7 @@ export function GenerateStep({ api, onBack, onRestartRequired, restartRequired }
             <div className="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[var(--retro-text)]">Image (.png)</h3>
-                <p className="mt-1 text-sm text-[var(--retro-muted)]">
+                <p className="mt-1 text-sm text-[var(--retro-muted)] max-w-[40ch]">
                   Save or share a ready-to-view picture of the finished terrain.
                 </p>
               </div>
@@ -135,7 +135,7 @@ export function GenerateStep({ api, onBack, onRestartRequired, restartRequired }
             <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[var(--retro-text)]">Tilemap (.json)</h3>
-                <p className="mt-1 text-sm text-[var(--retro-muted)]">
+                <p className="mt-1 text-sm text-[var(--retro-muted)] max-w-[40ch]">
                   A 2D array of the tile names/indices in their generated pattern above. This can be parsed to reconstruct the terrain in your project.
                 </p>
               </div>
@@ -151,7 +151,7 @@ export function GenerateStep({ api, onBack, onRestartRequired, restartRequired }
             <div className="flex flex-col gap-3 py-4 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[var(--retro-text)]">Tile rules (.json)</h3>
-                <p className="mt-1 text-sm text-[var(--retro-muted)]">
+                <p className="mt-1 text-sm text-[var(--retro-muted)] max-w-[40ch]">
                   The tile neighboring rules. Run the WFC engine on this to generate new terrain under the same contraints. A more flexible approach than the tilemap.
                 </p>
               </div>
