@@ -12,6 +12,8 @@ const STEP_ORDER: WizardStep[] = ['upload', 'analyze', 'configure', 'generate'];
 export default function App() {
   const [step, setStep] = useState<WizardStep>('upload');
   const [restartRequired, setRestartRequired] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [tileSize, setTileSize] = useState(22);
   const api = useWfcEngine();
 
   const activeIndex = STEP_ORDER.indexOf(step);
@@ -61,10 +63,21 @@ export default function App() {
 
         <div>
           <div hidden={step !== 'upload'}>
-            <UploadStep api={api} onNext={() => goTo('analyze')} />
+            <UploadStep
+              api={api}
+              onImageChange={setImageFile}
+              onTileSizeChange={setTileSize}
+              onNext={() => goTo('analyze')}
+            />
           </div>
           <div hidden={step !== 'analyze'}>
-            <AnalyzeStep api={api} onNext={() => goTo('configure')} onBack={() => goTo('upload')} />
+            <AnalyzeStep
+              api={api}
+              imageFile={imageFile}
+              tileSize={tileSize}
+              onNext={() => goTo('configure')}
+              onBack={() => goTo('upload')}
+            />
           </div>
           <div hidden={step !== 'configure'}>
             <ConfigureStep api={api} onNext={() => goTo('generate')} onBack={() => goTo('analyze')} />

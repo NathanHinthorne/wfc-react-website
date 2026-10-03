@@ -6,6 +6,8 @@ import type { WfcEngineApi } from '../../hooks/useWfcEngine';
 
 interface UploadStepProps {
   api: WfcEngineApi;
+  onImageChange: (file: File | null) => void;
+  onTileSizeChange: (tileSize: number) => void;
   onNext: () => void;
 }
 
@@ -16,18 +18,15 @@ const sampleImages = [
   { name: 'Grass 2', fileName: 'grass2.png', src: '/sample-images/grass2.png' },
 ];
 
-export function UploadStep({ api, onNext }: UploadStepProps) {
+export function UploadStep({ api, onImageChange, onTileSizeChange, onNext }: UploadStepProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [tileSize, setTileSize] = useState(22);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [sourceSize, setSourceSize] = useState({ width: 0, height: 0 });
   const [displayWidth, setDisplayWidth] = useState(0);
-  const [previewReady, setPreviewReady] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
   const [sampleError, setSampleError] = useState<string | null>(null);
-  const tileSizeInputRef = useRef<HTMLInputElement>(null);
   const previewImageRef = useRef<HTMLImageElement>(null);
   const resizeRef = useRef<{ pointerId: number; startX: number; startY: number; startTileSize: number } | null>(null);
 
@@ -52,10 +51,10 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
 
   const handleUpload = (next: File[]) => {
     setFiles(next);
+    onImageChange(next[0] ?? null);
     setSelectedSample(null);
     setPreviewSrc(next[0] ? URL.createObjectURL(next[0]) : null);
     setSourceSize({ width: 0, height: 0 });
-    setPreviewReady(false);
   };
 
   const handleSampleSelect = async (sample: (typeof sampleImages)[number]) => {
@@ -80,21 +79,9 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
   };
 
   const handleTileSizeChange = (value: number) => {
-    setTileSize(value);
-    setPreviewReady(false);
-  };
-
-  const handlePreview = async (requestedTileSize = tileSize) => {
-    if (!files[0] || loading) return;
-    const confirmedTileSize = Math.min(128, Math.max(1, requestedTileSize));
-    setTileSize(confirmedTileSize);
-    setLoading(true);
-    try {
-      await api.loadImage(files[0], confirmedTileSize);
-      setPreviewReady(true);
-    } finally {
-      setLoading(false);
-    }
+    const nextTileSize = Math.min(128, Math.max(1, value));
+    setTileSize(nextTileSize);
+    onTileSizeChange(nextTileSize);
   };
 
   const handleResizeStart = (event: React.PointerEvent<HTMLButtonElement>) => {
@@ -204,24 +191,13 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
             />
             <div className="flex flex-col items-start gap-3">
               <PixelNumberInput
-                ref={tileSizeInputRef}
                 label="Tile size (px)"
                 value={tileSize}
                 onChange={handleTileSizeChange}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    const value = Number(tileSizeInputRef.current?.value);
-                    if (Number.isFinite(value)) void handlePreview(value);
-                  }
-                }}
                 min={1}
                 max={128}
                 clampBehavior="blur"
               />
-              <PixelButton tone="green" disabled={!files[0] || loading} onClick={() => void handlePreview()}>
-                Confirm
-              </PixelButton>
             </div>
           </div>
 
@@ -261,7 +237,7 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
       <div className="flex justify-end">
         <PixelButton
           tone="green"
-          disabled={!previewReady || api.inputTiles.length === 0}
+          disabled={!files[0]}
           iconRight={<PxlKitIcon icon={ArrowRight} size={16} />}
           onClick={onNext}
         >

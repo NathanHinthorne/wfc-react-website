@@ -2,23 +2,50 @@ import { useState } from 'react';
 import {
   PixelButton,
   PixelCard,
-  PixelInput,
   PixelAlert
 } from '@pxlkit/ui-kit';
 import { PxlKitIcon } from '@pxlkit/core';
-import { ArrowRight, Search, Undo } from '@pxlkit/ui';
+import { ArrowRight, Search } from '@pxlkit/ui';
 import { TileVariantGallery } from '../TileVariantGallery';
 import type { WfcEngineApi } from '../../hooks/useWfcEngine';
 
 interface AnalyzeStepProps {
   api: WfcEngineApi;
+  imageFile: File | null;
+  tileSize: number;
   onNext: () => void;
   onBack: () => void;
 }
 
-export function AnalyzeStep({ api, onNext, onBack }: AnalyzeStepProps) {
+export function AnalyzeStep({ api, imageFile, tileSize, onNext, onBack }: AnalyzeStepProps) {
   const [selected, setSelected] = useState<number[]>([]);
   const [nameDraft, setNameDraft] = useState('');
+  const [analyzedSource, setAnalyzedSource] = useState<{ file: File; tileSize: number } | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  const analysisIsCurrent =
+    analyzedSource?.file === imageFile &&
+    analyzedSource.tileSize === tileSize &&
+    api.tileVariants.length > 0;
+
+  const handleAnalyze = async () => {
+    if (!imageFile || analyzing) return;
+    setAnalyzing(true);
+    setAnalysisError(null);
+    try {
+      if (!analyzedSource || analyzedSource.file !== imageFile || analyzedSource.tileSize !== tileSize) {
+        setSelected([]);
+        await api.loadImage(imageFile, tileSize);
+      }
+      api.analyze();
+      setAnalyzedSource({ file: imageFile, tileSize });
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : 'Unable to analyze the image.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const toggle = (index: number) => {
     setSelected((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]));
@@ -42,13 +69,14 @@ export function AnalyzeStep({ api, onNext, onBack }: AnalyzeStepProps) {
         title="2. Analyze the tileset"
         description="Find unique tiles and learn how they connect to each other."
       >
-        {!api.tileVariants.length ? (
+        {!analysisIsCurrent ? (
           <PixelButton
             tone="cyan"
+            disabled={!imageFile || analyzing}
             iconLeft={<PxlKitIcon icon={Search} size={16} />}
-            onClick={api.analyze}
+            onClick={() => void handleAnalyze()}
           >
-            Analyze
+            {analyzing ? 'Preparing image and analyzing…' : 'Analyze'}
           </PixelButton>
         ) : (
           <PixelAlert
@@ -59,9 +87,10 @@ export function AnalyzeStep({ api, onNext, onBack }: AnalyzeStepProps) {
             }.`}
           />
         )}
+        {analysisError && <p role="alert" className="mt-3 text-xs text-red-600">{analysisError}</p>}
       </PixelCard>
 
-      {api.tileVariants.length > 0 && (
+      {analysisIsCurrent && (
         <PixelCard
           title="Tile variants"
           description="Select one or more tiles, then apply a behavior or name below."
@@ -104,7 +133,7 @@ export function AnalyzeStep({ api, onNext, onBack }: AnalyzeStepProps) {
         </PixelButton>
         <PixelButton
           tone="green"
-          disabled={api.tileVariants.length === 0}
+          disabled={!analysisIsCurrent}
           iconRight={<PxlKitIcon icon={ArrowRight} size={16} />}
           onClick={onNext}
         >
