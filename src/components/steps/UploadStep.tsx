@@ -171,15 +171,19 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
                     }}
                   />
                   <div
-                    className="pointer-events-none absolute left-0 top-0 border-2 border-cyan-300 bg-cyan-300/10"
-                    style={{ width: `${displayTileSize}px`, height: `${displayTileSize}px` }}
+                    className="pointer-events-none absolute left-0 top-0 border-2 border-[var(--retro-green)]"
+                    style={{ backgroundColor: 'color-mix(in srgb, var(--retro-green) 16%, transparent)', width: `${displayTileSize}px`, height: `${displayTileSize}px` }}
                   />
                   <button
                     type="button"
                     aria-label="Drag to resize tile grid"
                     title="Drag to resize tile grid"
-                    className="absolute z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 touch-none cursor-nwse-resize border-2 bg-cyan-200/80 border-cyan-500 bg-[var(--retro-panel)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
-                    style={{ left: `${displayTileSize}px`, top: `${displayTileSize}px` }}
+                    className="absolute z-10 h-6 w-6 -translate-x-1/2 -translate-y-1/2 touch-none cursor-nwse-resize border-2 border-[var(--retro-green)] bg-[var(--retro-panel)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--retro-green)]"
+                    style={{
+                      left: `${displayTileSize}px`,
+                      top: `${displayTileSize}px`,
+                      boxShadow: 'inset 0 0 0 6px color-mix(in srgb, var(--retro-green) 28%, transparent)',
+                    }}
                     onPointerDown={handleResizeStart}
                     onPointerMove={handleResizeMove}
                     onPointerUp={handleResizeEnd}
@@ -215,7 +219,7 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
                 max={128}
                 clampBehavior="blur"
               />
-              <PixelButton tone="cyan" disabled={!files[0] || loading} onClick={() => void handlePreview()}>
+              <PixelButton tone="green" disabled={!files[0] || loading} onClick={() => void handlePreview()}>
                 Confirm
               </PixelButton>
             </div>
@@ -238,9 +242,10 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
                     onClick={() => void handleSampleSelect(sample)}
                     className={`overflow-hidden border-2 text-left transition-colors disabled:cursor-wait disabled:opacity-60 ${
                       selected
-                        ? 'border-cyan-500 bg-cyan-500/10'
-                        : 'border-[var(--retro-border)] hover:border-cyan-500'
+                        ? 'border-[var(--retro-green)]'
+                        : 'border-[var(--retro-border)] hover:border-[var(--retro-green)]'
                     }`}
+                    style={selected ? { backgroundColor: 'color-mix(in srgb, var(--retro-green) 12%, transparent)' } : undefined}
                   >
                     <img src={sample.src} alt="" className="pixelated h-24 w-full object-contain bg-[var(--retro-bg)] p-2" />
                     <span className="block px-2 py-1 text-xs font-bold">{sample.name}</span>
