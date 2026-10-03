@@ -9,14 +9,24 @@ interface UploadStepProps {
   onNext: () => void;
 }
 
+const sampleImages = [
+  { name: 'Cave', fileName: 'cave.png', src: '/sample-images/cave.png' },
+  { name: 'Flower', fileName: 'flower.png', src: '/sample-images/flower.png' },
+  { name: 'Grass 1', fileName: 'grass1.png', src: '/sample-images/grass1.png' },
+  { name: 'Grass 2', fileName: 'grass2.png', src: '/sample-images/grass2.png' },
+];
+
 export function UploadStep({ api, onNext }: UploadStepProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [tileSize, setTileSize] = useState(22);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [sourceSize, setSourceSize] = useState({ width: 0, height: 0 });
   const [displayWidth, setDisplayWidth] = useState(0);
   const [previewReady, setPreviewReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sampleLoading, setSampleLoading] = useState(false);
+  const [sampleError, setSampleError] = useState<string | null>(null);
   const tileSizeInputRef = useRef<HTMLInputElement>(null);
   const previewImageRef = useRef<HTMLImageElement>(null);
   const resizeRef = useRef<{ pointerId: number; startX: number; startY: number; startTileSize: number } | null>(null);
@@ -42,9 +52,31 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
 
   const handleUpload = (next: File[]) => {
     setFiles(next);
+    setSelectedSample(null);
     setPreviewSrc(next[0] ? URL.createObjectURL(next[0]) : null);
     setSourceSize({ width: 0, height: 0 });
     setPreviewReady(false);
+  };
+
+  const handleSampleSelect = async (sample: (typeof sampleImages)[number]) => {
+    setSampleLoading(true);
+    setSampleError(null);
+    try {
+      const response = await fetch(sample.src);
+      if (!response.ok) {
+        throw new Error(`Unable to load ${sample.name} sample image (${response.status}).`);
+      }
+
+      const image = await response.blob();
+      handleUpload([new File([image], sample.fileName, {
+        type: image.type || 'image/png',
+      })]);
+      setSelectedSample(sample.src);
+    } catch (error) {
+      setSampleError(error instanceof Error ? error.message : 'Unable to load the sample image.');
+    } finally {
+      setSampleLoading(false);
+    }
   };
 
   const handleTileSizeChange = (value: number) => {
@@ -187,6 +219,36 @@ export function UploadStep({ api, onNext }: UploadStepProps) {
                 Confirm
               </PixelButton>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wide">Try a sample image</h3>
+              <p className="text-xs text-[var(--retro-muted)]">Select an example to load it into the upload area.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {sampleImages.map((sample) => {
+                const selected = selectedSample === sample.src;
+                return (
+                  <button
+                    key={sample.src}
+                    type="button"
+                    disabled={sampleLoading}
+                    aria-pressed={selected}
+                    onClick={() => void handleSampleSelect(sample)}
+                    className={`overflow-hidden border-2 text-left transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                      selected
+                        ? 'border-cyan-500 bg-cyan-500/10'
+                        : 'border-[var(--retro-border)] hover:border-cyan-500'
+                    }`}
+                  >
+                    <img src={sample.src} alt="" className="pixelated h-24 w-full object-contain bg-[var(--retro-bg)] p-2" />
+                    <span className="block px-2 py-1 text-xs font-bold">{sample.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {sampleError && <p role="alert" className="text-xs text-red-600">{sampleError}</p>}
           </div>
         </div>
       </PixelCard>
