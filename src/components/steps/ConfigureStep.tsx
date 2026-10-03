@@ -73,7 +73,7 @@ export function ConfigureStep({ api, onNext, onBack }: ConfigureStepProps) {
             type="button"
             aria-label="Drag to resize grid width"
             title="Drag to resize width"
-            className="absolute -right-3 top-1/2 flex h-12 w-6 -translate-y-1/2 touch-none cursor-ew-resize items-center justify-center border border-[var(--retro-gold)] bg-[var(--retro-bg)]/90 text-[var(--retro-gold)] hover:bg-[var(--retro-gold)]/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--retro-gold)]"
+            className="absolute right-0 top-1/2 flex h-12 w-6 -translate-y-1/2 touch-none cursor-ew-resize items-center justify-center border border-[var(--retro-gold)] bg-[var(--retro-bg)]/90 text-[var(--retro-gold)] hover:bg-[var(--retro-gold)]/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--retro-gold)]"
             onPointerDown={(event) => startResize('width', event)}
             onPointerMove={updateResize}
             onPointerUp={stopResize}

@@ -42,7 +42,7 @@ export function CanvasGridView({ tiles, optionCounts, maxDisplayWidth = 480, fad
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    canvas.style.height = 'auto';
 
     const ctx = canvas.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -165,8 +165,8 @@ export function CanvasGridView({ tiles, optionCounts, maxDisplayWidth = 480, fad
   return (
     <canvas
       ref={canvasRef}
-      className="pixelated border-2 border-[var(--retro-border)]"
-      style={{ background: 'var(--retro-bg)' }}
+      className="pixelated block h-auto max-w-full border-2 border-[var(--retro-border)]"
+      style={{ background: 'var(--retro-bg)', maxWidth: '100%' }}
     />
   );
 }

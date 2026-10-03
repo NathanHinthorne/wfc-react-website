@@ -46,11 +46,16 @@ export default function App() {
         />
 
         <div className="my-8 sm:hidden">
-          <PixelStepper active={activeIndex} orientation="vertical">
-            <PixelStepper.Step label="Upload" description="Add sample terrain" />
-            <PixelStepper.Step label="Analyze" description="Find tile rules" />
-            <PixelStepper.Step label="Configure" description="Set output size" />
-            <PixelStepper.Step label="Generate" description="Run & export" />
+          <PixelStepper
+            active={activeIndex}
+            orientation="horizontal"
+            size="sm"
+            className="[&>[data-pxl-step]]:min-w-0"
+          >
+            <PixelStepper.Step label="Upload" />
+            <PixelStepper.Step label="Analyze" />
+            <PixelStepper.Step label="Configure" />
+            <PixelStepper.Step label="Generate" />
           </PixelStepper>
         </div>
 
