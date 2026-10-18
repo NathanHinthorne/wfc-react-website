@@ -83,7 +83,7 @@ export function GenerateStep({ api, onBack, onRestartRequired, restartRequired }
                     Pause
                   </PixelButton>
                 )}
-                <PixelButton tone="red" variant="ghost" iconLeft={<PxlKitIcon icon={Undo} size={16} />} onClick={api.reset}>
+                <PixelButton tone="red" iconLeft={<PxlKitIcon icon={Undo} size={16} />} onClick={api.reset}>
                   Reset
                 </PixelButton>
               </div>

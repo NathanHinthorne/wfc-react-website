@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { PixelFileUpload, PixelNumberInput, PixelButton, PixelCard } from '@pxlkit/ui-kit';
+import { PixelFileUpload, PixelButton, PixelCard } from '@pxlkit/ui-kit';
 import { PxlKitIcon } from '@pxlkit/core';
 import { ArrowRight } from '@pxlkit/ui';
 import type { WfcEngineApi } from '../../hooks/useWfcEngine';
+import { PixelNumberStepper } from '../PixelNumberStepper';
 
 interface UploadStepProps {
   api: WfcEngineApi;
@@ -190,13 +191,12 @@ export function UploadStep({ api, onImageChange, onTileSizeChange, onNext }: Upl
               accept="image/*"
             />
             <div className="flex flex-col items-start gap-3">
-              <PixelNumberInput
+              <PixelNumberStepper
                 label="Tile size (px)"
                 value={tileSize}
                 onChange={handleTileSizeChange}
                 min={1}
                 max={128}
-                clampBehavior="blur"
               />
             </div>
           </div>

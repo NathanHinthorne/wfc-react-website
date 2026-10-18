@@ -97,38 +97,12 @@ export function AnalyzeStep({ api, imageFile, tileSize, onNext, onBack }: Analyz
         >
           <div className="flex flex-col gap-4">
             <TileVariantGallery tiles={api.tileVariants} selected={selected} onToggle={toggle} />
-
-            {/* <div className="flex flex-wrap items-end gap-3 border-t-2 border-[var(--retro-border)] pt-4">
-
-              <div className="flex items-end gap-2">
-                <PixelInput
-                  label="Rename selected"
-                  value={nameDraft}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameDraft(e.target.value)}
-                  placeholder="e.g. grass"
-                  disabled={selected.length === 0}
-                />
-                <PixelButton size="sm" tone="purple" disabled={!nameDraft.trim() || selected.length === 0} onClick={applyName}>
-                  Apply
-                </PixelButton>
-              </div>
-
-              <PixelButton
-                tone="red"
-                size="sm"
-                variant="ghost"
-                iconLeft={<PxlKitIcon icon={Undo} size={14} />}
-                onClick={api.resetBehaviors}
-              >
-                Reset behaviors
-              </PixelButton>
-            </div> */}
           </div>
         </PixelCard>
       )}
 
       <div className="flex justify-between">
-        <PixelButton tone="neutral" variant="ghost" onClick={onBack}>
+        <PixelButton tone="neutral" onClick={onBack}>
           Back
         </PixelButton>
         <PixelButton
