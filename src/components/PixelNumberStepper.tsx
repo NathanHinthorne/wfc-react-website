@@ -81,7 +81,7 @@ export function PixelNumberStepper({
             }
           }}
           onBlur={handleBlur}
-          className="h-12 min-w-0 flex-1 border-2 border-[var(--retro-border)] bg-[var(--retro-bg)] px-2 text-center font-mono text-lg text-[var(--retro-text)] focus:border-[var(--retro-green)] focus:outline-none"
+          className="h-12 min-w-20 flex-1 border-2 border-[var(--retro-border)] bg-[var(--retro-bg)] px-2 text-center font-mono text-md text-[var(--retro-text)] focus:border-[var(--retro-green)] focus:outline-none"
         />
         <button
           type="button"

@@ -11,6 +11,7 @@ body,
 body {
   background: var(--retro-bg);
   color: var(--retro-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 /* Crisp pixel scaling for tile thumbnails generated from the source sheet */

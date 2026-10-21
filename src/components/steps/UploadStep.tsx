@@ -182,7 +182,7 @@ export function UploadStep({ api, onImageChange, onTileSizeChange, onNext }: Upl
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
             <PixelFileUpload
               label="Tileset image"
               hint="PNG or JPG, made of uniform square tiles"
@@ -190,7 +190,7 @@ export function UploadStep({ api, onImageChange, onTileSizeChange, onNext }: Upl
               onChange={handleUpload}
               accept="image/*"
             />
-            <div className="flex flex-col items-start gap-3">
+            <div className="flex min-w-0 flex-1 flex-col items-stretch gap-3">
               <PixelNumberStepper
                 label="Tile size (px)"
                 value={tileSize}
