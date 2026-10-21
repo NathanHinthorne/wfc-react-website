@@ -1,4 +1,5 @@
-import { Tile } from './tile';
+import { BOUNDARY_NEIGHBORS, Tile } from './tile';
+import type { TileNeighbor } from './tile';
 import { Cell } from './cell';
 import { Decision } from './decision';
 import { randomChoice } from './random';
@@ -90,15 +91,8 @@ export class WfcEngine {
     const height = this.inputGrid.length;
     const width = this.inputGrid[0]?.length ?? 0;
 
-    const mostCommonTile = this.tileVariants.reduce((a, b) =>
-      b.totalFrequencyInGrid > a.totalFrequencyInGrid ? b : a
-    );
-
-    const airTiles = this.tileVariants.filter((t) => t.behavior === 'air');
-    const edgeNeighbors = airTiles.length > 0 ? airTiles : [mostCommonTile];
-
     // Reset adjacency maps before rebuilding (needed because behaviors can be
-    // re-applied after the first analyze pass, e.g. toggling a floor tile).
+    // re-applied after the first analyze pass).
     for (const variant of this.tileVariants) {
       variant.up.clear();
       variant.right.clear();
@@ -106,7 +100,7 @@ export class WfcEngine {
       variant.left.clear();
     }
 
-    const bump = (map: Map<number, number>, index: number) =>
+    const bump = (map: Map<TileNeighbor, number>, index: TileNeighbor) =>
       map.set(index, (map.get(index) ?? 0) + 1);
 
     for (let y = 0; y < height; y++) {
@@ -117,25 +111,25 @@ export class WfcEngine {
         if (y > 0) {
           bump(variant.up, this.inputGrid[y - 1][x].index!);
         } else {
-          for (const edge of edgeNeighbors) variant.up.set(edge.index!, 1);
+          bump(variant.up, BOUNDARY_NEIGHBORS.top);
         }
 
         if (x < width - 1) {
           bump(variant.right, this.inputGrid[y][x + 1].index!);
         } else {
-          for (const edge of edgeNeighbors) variant.right.set(edge.index!, 1);
+          bump(variant.right, BOUNDARY_NEIGHBORS.right);
         }
 
         if (y < height - 1) {
           bump(variant.down, this.inputGrid[y + 1][x].index!);
         } else {
-          for (const edge of edgeNeighbors) variant.down.set(edge.index!, 1);
+          bump(variant.down, BOUNDARY_NEIGHBORS.bottom);
         }
 
         if (x > 0) {
           bump(variant.left, this.inputGrid[y][x - 1].index!);
         } else {
-          for (const edge of edgeNeighbors) variant.left.set(edge.index!, 1);
+          bump(variant.left, BOUNDARY_NEIGHBORS.left);
         }
       }
     }
@@ -172,16 +166,11 @@ export class WfcEngine {
     this.outputIsComplete = false;
 
     const floorTiles = this.tileVariants.filter((t) => t.behavior === 'floor');
-    const allIndices = this.tileVariants.map((t) => t.index!);
 
     for (let y = 0; y < height; y++) {
       this.outputGrid[y] = [];
       for (let x = 0; x < width; x++) {
-        const cell = new Cell(allIndices, x, y);
-        if (y < height - 1) {
-          for (const floorTile of floorTiles) cell.exclude(floorTile.index!);
-        }
-        this.outputGrid[y][x] = cell;
+        this.outputGrid[y][x] = this.createOutputCell(x, y, floorTiles);
       }
     }
 
@@ -190,16 +179,49 @@ export class WfcEngine {
 
   /** Mirrors restartOutputGrid() in wfc.js — used internally after many failed backtracks */
   private restartOutputGrid() {
-    const allIndices = this.tileVariants.map((t) => t.index!);
+    const floorTiles = this.tileVariants.filter((t) => t.behavior === 'floor');
     this.outputGrid = [];
     for (let y = 0; y < this.outputHeight; y++) {
       this.outputGrid[y] = [];
       for (let x = 0; x < this.outputWidth; x++) {
-        this.outputGrid[y][x] = new Cell(allIndices, x, y);
+        this.outputGrid[y][x] = this.createOutputCell(x, y, floorTiles);
       }
     }
     this.gridStates = [];
     this.decisions = [];
+  }
+
+  private createOutputCell(x: number, y: number, floorTiles: Tile[]): Cell {
+    const allIndices = this.tileVariants.map((tile) => tile.index!);
+    const cell = new Cell(allIndices, x, y);
+
+    if (y < this.outputHeight - 1) {
+      for (const floorTile of floorTiles) cell.exclude(floorTile.index!);
+    }
+
+    const boundaryRules = [
+      ...(y === 0 ? [{ neighbor: BOUNDARY_NEIGHBORS.top, direction: 'up' as const }] : []),
+      ...(x === this.outputWidth - 1 ? [{ neighbor: BOUNDARY_NEIGHBORS.right, direction: 'right' as const }] : []),
+      ...(y === this.outputHeight - 1 ? [{ neighbor: BOUNDARY_NEIGHBORS.bottom, direction: 'down' as const }] : []),
+      ...(x === 0 ? [{ neighbor: BOUNDARY_NEIGHBORS.left, direction: 'left' as const }] : []),
+    ];
+
+    const isOnBorder = boundaryRules.length > 0;
+
+    if (isOnBorder) {
+      cell.options.forEach((_, tileIndex) => {
+        const tile = this.tileVariants[tileIndex];
+        const counts = boundaryRules.map(({ neighbor, direction }) => tile[direction].get(neighbor) ?? 0);
+        if (counts.some((count) => count === 0)) {
+          cell.exclude(tileIndex);
+          return;
+        }
+
+        cell.options.set(tileIndex, counts.reduce((total, count) => total + count, 0));
+      });
+    }
+
+    return cell;
   }
 
   /**
@@ -261,7 +283,7 @@ export class WfcEngine {
   }
 
   private propagate(cell: Cell, tile: Tile, width: number, height: number) {
-    const intersect = (neighbor: Cell, directionMap: Map<number, number>) => {
+    const intersect = (neighbor: Cell, directionMap: Map<TileNeighbor, number>) => {
       if (neighbor.collapsed) return;
       neighbor.options.forEach((freq, optionTile) => {
         if (!directionMap.has(optionTile)) {

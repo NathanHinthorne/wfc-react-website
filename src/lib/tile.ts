@@ -1,6 +1,17 @@
 import { hashCanvas, canvasToDataURL } from './imageUtils';
 import type { TileBehavior } from './types';
 
+// boundary markers are virtual, pre-collapsed neighbors
+// they’re recorded in adjacency rules, but never added to the cell’s placeable tile options.
+export const BOUNDARY_NEIGHBORS = {
+  top: '__top_boundary__',
+  right: '__right_boundary__',
+  bottom: '__bottom_boundary__',
+  left: '__left_boundary__',
+} as const;
+
+export type TileNeighbor = number | (typeof BOUNDARY_NEIGHBORS)[keyof typeof BOUNDARY_NEIGHBORS];
+
 /**
  * Tiles refer to the individual images that make up the grid.
  * They contain information about their possible neighboring tiles.
@@ -29,12 +40,11 @@ export class Tile {
   /** How many times this exact tile variant appears in the input grid */
   totalFrequencyInGrid = 0;
 
-  // Rolls adjacency rules and frequency hints into one.
-  // Key: Tile Index, Value: number of times this tile was found connected to the given tile index.
-  up = new Map<number, number>();
-  right = new Map<number, number>();
-  down = new Map<number, number>();
-  left = new Map<number, number>();
+  // Adjacency counts use tile indexes for real neighbors and boundary markers for the input edge.
+  up = new Map<TileNeighbor, number>();
+  right = new Map<TileNeighbor, number>();
+  down = new Map<TileNeighbor, number>();
+  left = new Map<TileNeighbor, number>();
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
