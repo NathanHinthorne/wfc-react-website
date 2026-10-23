@@ -21,6 +21,10 @@ export default function App() {
     if (STEP_ORDER.indexOf(s) > activeIndex) window.scrollTo(0, 0);
     setStep(s);
   };
+  const handleStepClick = (index: number) => {
+    const target = STEP_ORDER[index];
+    if (target) goTo(target);
+  };
 
   return (
     <PxlKitToastProvider position="top-right" max={3}>
@@ -28,6 +32,7 @@ export default function App() {
       <aside className="fixed left-6 top-1/2 z-10 hidden h-[min(78vh,48rem)] w-44 -translate-y-1/2 items-center sm:flex">
         <PixelStepper
           active={activeIndex}
+          onStepClick={handleStepClick}
           orientation="vertical"
           className="h-full [&>div]:flex-1 [&>div>span]:h-auto [&>div>span]:flex-1"
         >
@@ -50,6 +55,7 @@ export default function App() {
         <div className="my-8 sm:hidden">
           <PixelStepper
             active={activeIndex}
+            onStepClick={handleStepClick}
             orientation="horizontal"
             size="sm"
             className="[&>[data-pxl-step]]:min-w-0"
